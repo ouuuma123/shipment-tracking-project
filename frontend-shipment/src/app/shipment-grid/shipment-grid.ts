@@ -51,6 +51,11 @@ export class ShipmentGrid implements OnInit{
   }
 
   private handleStatusUpdate(update: StatusUpdateMessage): void {
+    if (!this.shipments().some(shipment => shipment.id === update.shipmentId)) {
+      this.loadShipment();
+      return;
+    }
+
     this.shipments.update(shipments => {
       const updatedShipment = shipments.find(shipment => shipment.id === update.shipmentId);
       if(!updatedShipment) {

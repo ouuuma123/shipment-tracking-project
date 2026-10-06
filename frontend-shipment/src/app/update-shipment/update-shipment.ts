@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ShipmentService } from '../services/shipment-service';
-import { Shipment, SHIPMENT_STATUS, STATUS_LABELS } from '../models/shipment.model';
+import { Shipment, SHIPMENT_STATUS, STATUS_LABELS, StatusUpdateMessage } from '../models/shipment.model';
 import { catchError, of } from 'rxjs';
+import { WebsocketService } from '../services/websocket-service';
 
 @Component({
   imports: [ReactiveFormsModule, CommonModule],
@@ -12,7 +14,9 @@ import { catchError, of } from 'rxjs';
   templateUrl: './update-shipment.html',
 })
 export class UpdateShipment implements OnInit{
+  private destroyRef = inject(DestroyRef);
   private shipmentService = inject(ShipmentService);
+  private websocketService = inject(WebsocketService);
   private fb = inject(FormBuilder);
 
   STATUS_LABELS = STATUS_LABELS;
@@ -31,6 +35,33 @@ export class UpdateShipment implements OnInit{
 
   ngOnInit(): void {
     this.loadShipments();
+    this.websocketService.getStatusUpdates()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
+        if (update) {
+          this.handleStatusUpdate(update);
+        }
+      });
+  }
+
+  private handleStatusUpdate(update: StatusUpdateMessage): void {
+    if (!this.shipments().some(shipment => shipment.id === update.shipmentId)) {
+      this.loadShipments();
+      return;
+    }
+
+    this.shipments.update(shipments =>
+      shipments.map(shipment =>
+        shipment.id === update.shipmentId
+          ? {
+              ...shipment,
+              status: update.status,
+              currentLocation: update.currentLocation,
+              updatedAt: update.timestamp,
+            }
+          : shipment,
+      ),
+    );
   }
 
   loadShipments(): void {
