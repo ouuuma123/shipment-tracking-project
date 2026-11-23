@@ -1,8 +1,6 @@
 package com.example.Shipment.shipment.controller;
 
 import com.example.Shipment.shipment.DTO.ShipmentDTO;
-import com.example.Shipment.shipment.entitie.Shipment;
-import com.example.Shipment.shipment.entitie.ShipmentStatus;
 import com.example.Shipment.shipment.service.ShipmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,13 +34,6 @@ public class ShipmentController {
     @GetMapping("/{id}")
     public ResponseEntity<ShipmentDTO.ShipmentResponse> getShipmentById(@PathVariable Long id) {
         ShipmentDTO.ShipmentResponse shipment = shipmentService.getShipmentById(id);
-
-        return ResponseEntity.status(HttpStatus.OK).body(shipment);
-    }
-
-    @GetMapping("/track/{trackingNumber}")
-    public ResponseEntity<ShipmentDTO.ShipmentResponse> getShipmentByTrackingNumber(@PathVariable String trackingNumber) {
-        ShipmentDTO.ShipmentResponse shipment = shipmentService.getShipmentByTrackingNumber(trackingNumber);
 
         return ResponseEntity.status(HttpStatus.OK).body(shipment);
     }

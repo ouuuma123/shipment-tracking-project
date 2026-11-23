@@ -1,0 +1,77 @@
+<section class="space-y-8">
+  <div>
+    <p class="text-sm font-semibold uppercase tracking-widest text-cyan-400">Administration</p>
+    <h1 class="mt-2 text-2xl font-bold text-white">Gestion des comptes</h1>
+    <p class="mt-2 text-sm text-zinc-400">Seuls les administrateurs peuvent créer des comptes et attribuer les rôles.</p>
+  </div>
+
+  @if (message()) {
+    <div role="status" class="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-300">
+      {{ message() }}
+    </div>
+  }
+  @if (error()) {
+    <div role="alert" class="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+      {{ error() }}
+    </div>
+  }
+
+  <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+    <form class="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-6" [formGroup]="userForm" (ngSubmit)="createUser()">
+      <h2 class="text-lg font-semibold text-white">Créer un compte</h2>
+      <label class="block space-y-2 text-sm text-zinc-300">
+        <span>Nom complet</span>
+        <input class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-white" formControlName="fullName" />
+      </label>
+      <label class="block space-y-2 text-sm text-zinc-300">
+        <span>Adresse e-mail</span>
+        <input class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-white" type="email" formControlName="email" />
+      </label>
+      <label class="block space-y-2 text-sm text-zinc-300">
+        <span>Mot de passe temporaire (12 caractères minimum)</span>
+        <input class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-white" type="password" formControlName="password" />
+      </label>
+      <label class="block space-y-2 text-sm text-zinc-300">
+        <span>Rôle</span>
+        <select class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-white" formControlName="role">
+          <option value="ADMIN">Administrateur</option>
+          <option value="MANAGER">Manager</option>
+          <option value="DISPATCHER">Dispatcher</option>
+          <option value="DRIVER">Livreur</option>
+          <option value="CLIENT">Client</option>
+          <option value="OPERATOR">Opérateur (legacy)</option>
+        </select>
+      </label>
+      <button
+        class="w-full rounded-lg bg-cyan-600 px-4 py-2.5 font-semibold text-white hover:bg-cyan-500 disabled:opacity-50"
+        type="submit"
+        [disabled]="submitting()"
+      >
+        {{ submitting() ? 'Création...' : 'Créer le compte' }}
+      </button>
+    </form>
+
+    <section class="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 class="mb-4 text-lg font-semibold text-white">Comptes existants</h2>
+      @if (loading()) {
+        <p class="text-sm text-zinc-400">Chargement des comptes...</p>
+      } @else if (users().length === 0) {
+        <p class="text-sm text-zinc-400">Aucun compte disponible.</p>
+      } @else {
+        <ul class="divide-y divide-zinc-800">
+          @for (user of users(); track user.id) {
+            <li class="flex items-center justify-between gap-4 py-4">
+              <div class="min-w-0">
+                <p class="truncate font-medium text-white">{{ user.fullName }}</p>
+                <p class="truncate text-sm text-zinc-400">{{ user.email }}</p>
+              </div>
+              <span class="shrink-0 rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
+                {{ user.role }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</section>

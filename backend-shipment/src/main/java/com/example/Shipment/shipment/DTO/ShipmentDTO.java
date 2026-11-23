@@ -2,6 +2,7 @@ package com.example.Shipment.shipment.DTO;
 
 import com.example.Shipment.shipment.entitie.ShipmentStatus;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -47,6 +48,7 @@ public class ShipmentDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateStatusRequest {
+        @NotNull(message = "Status is required")
         private ShipmentStatus status;
         private String currentLocation;
     }

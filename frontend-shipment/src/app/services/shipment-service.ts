@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { CreateShipmentRequest, Shipment, UpdateStatusRequest } from '../models/shipment.model';
 
 @Service()
 export class ShipmentService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8080/api/shipments';
+    private apiUrl = `${environment.apiUrl}/api/shipments`;
 
     createShipment(request: CreateShipmentRequest): Observable<Shipment> {
        return this.http.post<Shipment>(this.apiUrl, request);
@@ -21,7 +22,7 @@ export class ShipmentService {
     }
 
     getShipmentByTrackingNumber(trackingNumber: string): Observable<Shipment> {
-        return this.http.get<Shipment>(`${this.apiUrl}/track/${trackingNumber}`);
+        return this.http.get<Shipment>(`${environment.apiUrl}/api/track/${encodeURIComponent(trackingNumber)}`);
     }
 
     updateShipmentStatus(id: number, request: UpdateStatusRequest): Observable<Shipment> {

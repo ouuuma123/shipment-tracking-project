@@ -1,11 +1,14 @@
-import { DestroyRef, inject, Inject, Service } from '@angular/core';
+import { DestroyRef, inject, Service } from '@angular/core';
 import { Client, StompSubscription, Versions } from '@stomp/stompjs';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { StatusUpdateMessage } from '../models/shipment.model';
+import { AuthService } from './auth-service';
 
 @Service()
 export class WebsocketService {
     private destroyRef = inject(DestroyRef);
+    private authService = inject(AuthService);
     private client!: Client; // définir le client WebSocket
     private connected$ = new BehaviorSubject<boolean>(false);
     private statusUpdate$ = new BehaviorSubject<null | StatusUpdateMessage>(null);
@@ -22,12 +25,19 @@ export class WebsocketService {
 
     initClient(): void {
         this.client = new Client({
-            brokerURL: 'http://localhost:8080/ws',
+            brokerURL: `${environment.apiUrl.replace(/^http/, 'ws')}/ws`,
             stompVersions: Versions.default,
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
             connectionTimeout: 10000,
+            beforeConnect: async () => {
+                const token = await this.authService.getValidAccessToken();
+                if (!token) {
+                    throw new Error('An active session is required for WebSocket connections.');
+                }
+                this.client.connectHeaders = { Authorization: `Bearer ${token}` };
+            },
 
             onConnect: (frame) => {          // frame : c'est ce que le serveur nous renvoie
                 console.log("[Websocket] Connected !!");
@@ -56,6 +66,9 @@ export class WebsocketService {
     }
 
     connect(): void {
+        if (!this.authService.currentUser()) {
+            return;
+        }
         if(this.client.active) {
             console.log("[Websocket] Already connected or connecting !!");
             return;
@@ -85,6 +98,10 @@ export class WebsocketService {
     }
 
     private subscripeToTopic(): void {
+        const role = this.authService.currentUser()?.role;
+        if (!role || !['ADMIN', 'MANAGER', 'DISPATCHER', 'OPERATOR'].includes(role)) {
+            return;
+        }
         const subscription = this.client.subscribe("/topic/shipments", (message) => {
             try{
                 const update = JSON.parse(message.body) as StatusUpdateMessage;

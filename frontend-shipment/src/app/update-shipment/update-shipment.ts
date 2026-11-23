@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ShipmentService } from '../services/shipment-service';
-import { Shipment, SHIPMENT_STATUS, STATUS_LABELS, StatusUpdateMessage } from '../models/shipment.model';
+import { Shipment, ShipmentStatus, STATUS_LABELS, STATUS_TRANSITIONS, StatusUpdateMessage } from '../models/shipment.model';
 import { catchError, of } from 'rxjs';
 import { WebsocketService } from '../services/websocket-service';
 
@@ -20,7 +21,7 @@ export class UpdateShipment implements OnInit{
   private fb = inject(FormBuilder);
 
   STATUS_LABELS = STATUS_LABELS;
-  statusOptions = Object.values(SHIPMENT_STATUS);
+  statusOptions = signal<ShipmentStatus[]>([]);
   shipments = signal<Shipment[]>([]);
   errorMessage = signal<string>('');
   isLoading = signal<boolean>(false);
@@ -29,7 +30,7 @@ export class UpdateShipment implements OnInit{
 
   updateForm: FormGroup = this.fb.group({
     shipmentId: [null, Validators.required],
-    status: [SHIPMENT_STATUS.PROCESSING, Validators.required],
+    status: [null, Validators.required],
     currentLocation: [''],
   });
 
@@ -91,16 +92,16 @@ export class UpdateShipment implements OnInit{
 
     const { shipmentId, status, currentLocation } = this.updateForm.value; 
     this.shipmentService.updateShipmentStatus(shipmentId, { status, currentLocation})
-      .pipe(catchError((error) => {
-        this.errorMessage.set('Failed to load shipments');
-        console.error('error:', error);
+      .pipe(catchError((error: unknown) => {
+        this.errorMessage.set(this.readError(error, 'Failed to update the shipment status'));
         return of(null);
       }))
       .subscribe((result) => {
         if(result !== null) {
+          this.statusOptions.set([]);
           this.updateForm.reset({
             shipmentId: null,
-            status: SHIPMENT_STATUS.PROCESSING,
+            status: null,
             currentLocation: '',
           });
         }
@@ -108,18 +109,29 @@ export class UpdateShipment implements OnInit{
       });
   }
 
+  private readError(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse && typeof error.error?.message === 'string') {
+      return error.error.message;
+    }
+    return fallback;
+  }
+
   onSelectShipmentId(): void {
     const shipmentId = this.updateForm.get('shipmentId')?.value;
 
-    if(!shipmentId)
+    if (!shipmentId) {
+      this.statusOptions.set([]);
+      this.updateForm.patchValue({ status: null, currentLocation: '' });
       return;
+    }
 
     const selectedShipment = this.shipments().find(shipment => shipment.id === shipmentId);
-    if(selectedShipment) {
-      this.updateForm.patchValue({
-        currentLocation: selectedShipment.currentLocation || '',
-      });
-    }
+    const nextStatuses = selectedShipment ? [...STATUS_TRANSITIONS[selectedShipment.status]] : [];
+    this.statusOptions.set(nextStatuses);
+    this.updateForm.patchValue({
+      currentLocation: selectedShipment?.currentLocation || '',
+      status: nextStatuses[0] ?? null,
+    });
   }
 
   hasError(fieldName: string): boolean {

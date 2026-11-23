@@ -1,11 +1,12 @@
 package com.example.Shipment.shipment.entitie;
 
 public enum ShipmentStatus {
-    ORDER_PLACED,
-    PROCESSING,
+    CREATED,
     PICKED_UP,
     IN_TRANSIT,
     OUT_FOR_DELIVERY,
     DELIVERED,
-    EXCEPTION,
+    FAILED_DELIVERY,
+    RETURNED,
+    CANCELLED
 }

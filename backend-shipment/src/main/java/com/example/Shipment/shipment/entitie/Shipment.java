@@ -47,7 +47,7 @@ public class Shipment {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (status == null) {
-            status = ShipmentStatus.ORDER_PLACED;
+            status = ShipmentStatus.CREATED;
         }
     }
 

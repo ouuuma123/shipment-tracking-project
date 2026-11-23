@@ -1,12 +1,13 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { credentialsCsrfInterceptor } from './services/csrf-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withFetch()), // withFetch() signifie que les requêtes HTTP seront effectuées avec fetch càd avec le navigateur.
-  ]
+    provideHttpClient(withFetch(), withInterceptors([credentialsCsrfInterceptor])),
+  ],
 };
