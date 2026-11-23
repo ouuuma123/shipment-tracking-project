@@ -121,18 +121,3 @@ L'inscription publique crée uniquement des comptes CLIENT. Un administrateur pe
 ## Réinitialisation du mot de passe
 
 La réinitialisation est simulée. Le lien à usage unique est valable 15 minutes et n'est pas écrit dans les logs par défaut. Pour la tester en local, démarrez le backend avec `PASSWORD_RESET_LOG_LINK=true`. Le lien contient un jeton temporaire : n'activez jamais cette option en production et ne conservez pas ces logs.
-
-## Limites actuelles
-
-- La base H2 est en mémoire : les comptes et les expéditions sont supprimés à l'arrêt du backend. Une base persistante est nécessaire avant une mise en production.
-- Aucun e-mail n'est envoyé pour la réinitialisation du mot de passe. Il faudra brancher un fournisseur d'e-mail avant la production.
-- Les rôles DRIVER et CLIENT ne peuvent pas encore consulter les expéditions. L'affectation des livreurs et les règles de propriété côté client seront ajoutées plus tard.
-
-## Pistes d'amélioration
-
-- Base de données PostgreSQL
-- Affectation des livreurs et accès des rôles DRIVER et CLIENT à leurs expéditions
-- Historique des événements de suivi
-- Page publique de suivi par numéro
-- Compléter les tests unitaires et ajouter des tests d'intégration frontend
-- Docker Compose
